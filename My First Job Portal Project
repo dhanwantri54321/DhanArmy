@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract JobPortal {
+    struct Job {
+        address employer; // Address of the employer who posted the job
+        string title; // Job title
+        string description; // Job description
+        uint256 salary; // Job salary
+    }
+
+    mapping(uint256 => Job) public jobs; // Mapping to store jobs by their unique ID
+    uint256 public jobIdCounter; // Counter to assign unique IDs to jobs
+
+    event JobPosted(uint256 indexed jobId, address indexed employer, string title); // Event emitted when a job is posted
+
+    // Function to post a new job
+    function postJob(string memory title, string memory description, uint256 salary) public {
+        require(bytes(title).length > 0, "Title must not be empty"); // Title should not be empty
+        require(salary > 0, "Salary must be greater than zero"); // Salary should be greater than zero
+
+        uint256 jobId = jobIdCounter++; // Assign a unique ID to the job
+        Job storage newJob = jobs[jobId]; // Create a new job object
+
+        newJob.employer = msg.sender; // Set the employer as the address of the function caller
+        newJob.title = title; // Set the job title
+        newJob.description = description; // Set the job description
+        newJob.salary = salary; // Set the job salary
+
+        emit JobPosted(jobId, msg.sender, title); // Emit the JobPosted event
+    }
+
+    // Function to get the details of a job
+    function getJob(uint256 jobId) public view returns (address employer, string memory title, string memory description, uint256 salary) {
+        Job storage job = jobs[jobId]; // Retrieve the job from the mapping
+
+        return (job.employer, job.title, job.description, job.salary);
+    }
+}
