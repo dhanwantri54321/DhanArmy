@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract CertificateSystem {
+    struct Certificate {
+        address issuer;
+        string encryptedData; // Encrypted certificate details
+        uint256 timestamp;
+    }
+
+    mapping(uint256 => Certificate) public certificates;
+    uint256 public certificateCount;
+
+    event CertificateAdded(uint256 indexed certificateId, address indexed issuer, uint256 timestamp);
+
+    modifier onlyAuthorized() {
+        // Implement access control here (e.g., only educational institutions)
+        _;
+    }
+
+    function addCertificate(string memory encryptedData) public onlyAuthorized {
+        require(bytes(encryptedData).length > 0, "Data cannot be empty");
+
+        certificates[certificateCount] = Certificate({
+            issuer: msg.sender,
+            encryptedData: encryptedData,
+            timestamp: block.timestamp
+        });
+
+        emit CertificateAdded(certificateCount, msg.sender, block.timestamp);
+
+        certificateCount++;
+    }
+
+    function verifyCertificate(uint256 certificateId, string memory decryptedData) public view returns (bool) {
+        require(certificateId < certificateCount, "Invalid certificate ID");
+        require(bytes(decryptedData).length > 0, "Data cannot be empty");
+
+        Certificate storage cert = certificates[certificateId];
+
+        // Compare decryptedData with decrypted certificate data
+        // Implement decryption and comparison logic here
+
+        return true; // Placeholder for verification result
+    }
+}
