@@ -1,0 +1,29 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract HealthRecordSystem {
+    struct HealthRecord {
+        address patient;
+        string encryptedData; // Encrypted patient data
+        uint256 timestamp;
+    }
+
+    mapping(uint256 => HealthRecord) public records;
+    uint256 public recordCount;
+
+    event RecordAdded(uint256 indexed recordId, address indexed patient, uint256 timestamp);
+
+    function addRecord(string memory encryptedData) public {
+        require(bytes(encryptedData).length > 0, "Data cannot be empty");
+
+        records[recordCount] = HealthRecord({
+            patient: msg.sender,
+            encryptedData: encryptedData,
+            timestamp: block.timestamp
+        });
+
+        emit RecordAdded(recordCount, msg.sender, block.timestamp);
+
+        recordCount++;
+    }
+}
