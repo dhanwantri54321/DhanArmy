@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract IdentityManagement {
+    struct Identity {
+        string name;
+        string dateOfBirth;
+        string addressInfo;
+        address owner;
+    }
+
+    mapping(string => Identity) public identities;
+
+    function addIdentity(
+        string memory name,
+        string memory dateOfBirth,
+        string memory addressInfo
+    ) public {
+        require(bytes(name).length > 0, "Invalid name");
+        require(bytes(dateOfBirth).length > 0, "Invalid date of birth");
+        require(bytes(addressInfo).length > 0, "Invalid address");
+
+        identities[name] = Identity({
+            name: name,
+            dateOfBirth: dateOfBirth,
+            addressInfo: addressInfo,
+            owner: msg.sender
+        });
+    }
+
+    function getIdentity(string memory name) public view returns (string memory, string memory, string memory) {
+        Identity memory identity = identities[name];
+        return (identity.name, identity.dateOfBirth, identity.addressInfo);
+    }
+}
