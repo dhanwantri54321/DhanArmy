@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract FoodAuthentication {
+    struct FoodItem {
+        address originFarm;
+        string harvestDate;
+        string distributor;
+        string[] journey;
+        bool isVerified;
+    }
+
+    mapping(string => FoodItem) public foodItems;
+    mapping(address => bool) public authorizedParties;
+
+    event FoodItemAdded(string indexed identifier, address indexed originFarm, string harvestDate, string distributor);
+    event FoodItemVerified(string indexed identifier);
+
+    constructor() {
+        authorizedParties[msg.sender] = true; // Contract creator is authorized
+    }
+
+    modifier onlyAuthorized() {
+        require(authorizedParties[msg.sender], "Not authorized");
+        _;
+    }
+
+    function addFoodItem(
+        string memory identifier,
+        string memory harvestDate,
+        string memory distributor
+    ) public onlyAuthorized {
+        require(bytes(identifier).length > 0, "Invalid identifier");
+        require(bytes(harvestDate).length > 0, "Invalid harvest date");
+        require(bytes(distributor).length > 0, "Invalid distributor");
+
+        foodItems[identifier] = FoodItem({
+            originFarm: msg.sender,
+            harvestDate: harvestDate,
+            distributor: distributor,
+            journey: new string[](0),
+            isVerified: false
+        });
+
+        emit FoodItemAdded(identifier, msg.sender, harvestDate, distributor);
+    }
+
+    function trackFoodItem(string memory identifier, string memory journeyStep) public onlyAuthorized {
+        require(bytes(journeyStep).length > 0, "Invalid journey step");
+
+        FoodItem storage food = foodItems[identifier];
+        require(food.originFarm != address(0), "Food item not found");
+
+        food.journey.push(journeyStep);
+    }
+
+    function verifyFoodItem(string memory identifier) public onlyAuthorized {
+        FoodItem storage food = foodItems[identifier];
+        require(food.originFarm != address(0), "Food item not found");
+        require(food.journey.length > 0, "Food item journey not started");
+
+        food.isVerified = true;
+
+        emit FoodItemVerified(identifier);
+    }
+
+    function isFoodItemVerified(string memory identifier) public view returns (bool) {
+        return foodItems[identifier].isVerified;
+    }
+}
