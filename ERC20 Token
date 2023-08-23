@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+// Import the ERC20 contract from the OpenZeppelin library
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// Define the MyToken contract that inherits from ERC20
+contract MyToken is ERC20 {
+    constructor(uint256 initialSupply) ERC20("My Token", "MTK") {
+        // Mint the initial supply of tokens to the contract deployer
+        _mint(msg.sender, initialSupply);
+    }
+}
+
+// Import the previously created MyToken contract
+import "./MyToken.sol";
+
+// Define the ProductStore contract
+contract ProductStore {
+    MyToken public token; // Instance of the MyToken contract
+    address public owner; // Address of the contract owner
+
+    // Constructor to initialize the contract with the address of the ERC20 token
+    constructor(address tokenAddress) {
+        token = MyToken(tokenAddress);
+        owner = msg.sender; // Set the contract owner as the deployer
+    }
+
+    // Struct to define a product's price and quantity
+    struct Product { uint256 price; uint256 quantity; }
+    mapping(uint256 => Product) public products; // Store products by ID
+    uint256 public productCount; // Track the number of products
+
+    // Function to add a new product (only owner can add)
+    function addProduct(uint256 price, uint256 quantity) external {
+        require(msg.sender == owner, "Only the owner can add products");
+        productCount++;
+        products[productCount] = Product(price, quantity);
+    }
+
+    // Function for users to buy a product with ERC20 tokens
+    function buyProduct(uint256 productId) external {
+        Product storage product = products[productId];
+        require(product.quantity > 0, "Product not available");
+        require(token.balanceOf(msg.sender) >= product.price, "Insufficient balance");
+
+        // Transfer tokens from the buyer to the owner
+        token.transferFrom(msg.sender, owner, product.price);
+        product.quantity--;
+
+        // Additional steps: Create a bill NFT for the user and emit an event
+    }
+}
